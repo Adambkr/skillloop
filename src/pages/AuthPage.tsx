@@ -30,7 +30,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const {markPreviewAuthenticated}=useAuth();
+  const {markPreviewAuthenticated,refreshAccess}=useAuth();
   const googleEnabled = import.meta.env.VITE_SUPABASE_GOOGLE_ENABLED === "true";
   useEffect(() => {
     const referral = params.get("ref"),
@@ -92,7 +92,13 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
       setMessage(
         "Account created. Check your inbox to confirm your email, then your profile can begin.",
       );
-    else navigate(signup ? "/onboarding" : params.get("redirect") || "/dashboard");
+    else if (signup) navigate("/onboarding");
+    else {
+      const access = await refreshAccess();
+      const redirect = params.get("redirect");
+      if (redirect) navigate(redirect);
+      else navigate(access?.onboardingComplete ? "/dashboard" : "/onboarding");
+    }
   }
 
   async function googleSignIn() {

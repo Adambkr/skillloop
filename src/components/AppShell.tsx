@@ -29,7 +29,7 @@ export function AppShell() {
     </aside>
     {open && <button className="scrim" onClick={() => setOpen(false)} aria-label="Close menu" />}
     <main className="app-main">
-      <header className="app-topbar"><button className="icon-button mobile-only" onClick={() => setOpen(true)} aria-label="Open menu"><Menu /></button><div className="topbar-path"><span>SkillLoop</span><ChevronRight size={14} /><strong>{nav.find(([, path]) => location.pathname === path)?.[0] || (location.pathname.startsWith('/sessions/')?'Session detail':location.pathname.startsWith('/circles/')?'Circle community':'Profile setup')}</strong></div><NotificationCenter/></header>
+      <header className="app-topbar"><button className="icon-button mobile-only" onClick={() => setOpen(true)} aria-label="Open menu"><Menu /></button><div className="topbar-path"><span>SkillLoop</span><ChevronRight size={14} /><strong>{nav.find(([, path]) => location.pathname === path)?.[0] || (location.pathname.startsWith('/sessions/')?'Session detail':location.pathname.startsWith('/circles/')?'Circle community':location.pathname.startsWith('/admin')?'Admin safety':location.pathname.startsWith('/onboarding')?'Profile setup':'SkillLoop')}</strong></div><NotificationCenter/></header>
       <div className="page-wrap"><Outlet /></div>
     </main>
     <nav className="mobile-bottom-nav" aria-label="Mobile navigation"><NavLink to="/dashboard"><Home/>Hub</NavLink><NavLink to="/discover"><Compass/>Matches</NavLink><NavLink to="/requests"><HeartHandshake/>Requests</NavLink><NavLink to="/chat"><MessageCircle/>Chat</NavLink><NavLink to="/profile"><UserRound/>Me</NavLink></nav>
