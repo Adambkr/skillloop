@@ -15,7 +15,7 @@ export function AppShell() {
   const [open, setOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, signOut, isAdmin } = useAuth()
+  const { user, signOut, isAdmin, onboardingComplete } = useAuth()
   const previewName = localStorage.getItem('skillloop_preview_name') || 'SkillLoop Member'
   const fullName = user?.user_metadata?.full_name || previewName
   const initials = fullName.split(' ').map((part:string)=>part[0]).join('').slice(0,2).toUpperCase()
@@ -24,7 +24,7 @@ export function AppShell() {
     <aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
       <div className="sidebar-head"><Logo /><button className="icon-button mobile-only" onClick={() => setOpen(false)} aria-label="Close menu"><X /></button></div>
       <nav className="side-nav" aria-label="Main navigation">{nav.map(([label, to, Icon]) => <NavLink key={to} to={to} onClick={() => setOpen(false)}><Icon size={19} />{label}</NavLink>)}{isAdmin&&<NavLink className="admin-nav-link" to="/admin" onClick={()=>setOpen(false)}><ShieldCheck size={19}/>Admin safety</NavLink>}</nav>
-      <NavLink to="/onboarding" className="profile-nudge"><span className="nudge-icon"><Sparkles size={18} /></span><span><strong>Build your profile</strong><small>Unlock better matches</small></span><ChevronRight size={17} /></NavLink>
+      {!onboardingComplete && <NavLink to="/onboarding" className="profile-nudge"><span className="nudge-icon"><Sparkles size={18} /></span><span><strong>Build your profile</strong><small>Unlock better matches</small></span><ChevronRight size={17} /></NavLink>}
       <div className="sidebar-user"><span className="avatar">{initials}</span><span><strong>{fullName}</strong><small>{isAdmin?'SkillLoop administrator':'SkillLoop learner'}</small></span><button type="button" onClick={logout} aria-label="Log out"><LogOut /></button></div>
     </aside>
     {open && <button className="scrim" onClick={() => setOpen(false)} aria-label="Close menu" />}

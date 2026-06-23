@@ -2,7 +2,8 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { Session, User } from '@supabase/supabase-js'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 
-type AuthContextValue = { user: User | null; loading: boolean; isAuthenticated:boolean; onboardingComplete:boolean; isAdmin: boolean; accountStatus: 'active'|'suspended'; refreshAccess: () => Promise<void>; markPreviewAuthenticated:()=>void; markOnboardingComplete:()=>void; signOut: () => Promise<void> }
+type AccessInfo = { isAdmin: boolean; accountStatus: 'active'|'suspended'; onboardingComplete: boolean }
+type AuthContextValue = { user: User | null; loading: boolean; isAuthenticated:boolean; onboardingComplete:boolean; isAdmin: boolean; accountStatus: 'active'|'suspended'; refreshAccess: () => Promise<AccessInfo | undefined>; markPreviewAuthenticated:()=>void; markOnboardingComplete:()=>void; signOut: () => Promise<void> }
 const AuthContext = createContext<AuthContextValue>({ user: null, loading: true, isAuthenticated:false, onboardingComplete:false, isAdmin: false, accountStatus: 'active', refreshAccess: async()=>undefined, markPreviewAuthenticated:()=>undefined, markOnboardingComplete:()=>undefined, signOut: async () => undefined })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -12,7 +13,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [onboardingComplete,setOnboardingComplete]=useState(!isSupabaseConfigured&&Boolean(localStorage.getItem('skillloop_profile_preview')))
   const [isAdmin,setIsAdmin]=useState(!isSupabaseConfigured&&localStorage.getItem('skillloop_preview_admin')==='true')
   const [accountStatus,setAccountStatus]=useState<'active'|'suspended'>('active')
-  async function loadAccess(userId?:string){if(!isSupabaseConfigured)return;if(!userId){setIsAdmin(false);setAccountStatus('active');setOnboardingComplete(false);return}const{data}=await supabase.rpc('get_my_access');const access=data as {isAdmin?:boolean;accountStatus?:string;onboardingComplete?:boolean}|null;setIsAdmin(Boolean(access?.isAdmin));setAccountStatus(access?.accountStatus==='suspended'?'suspended':'active');setOnboardingComplete(Boolean(access?.onboardingComplete))}
+  async function loadAccess(userId?:string):Promise<AccessInfo|undefined>{if(!isSupabaseConfigured)return;if(!userId){setIsAdmin(false);setAccountStatus('active');setOnboardingComplete(false);return}const{data}=await supabase.rpc('get_my_access');const access=data as {isAdmin?:boolean;accountStatus?:string;onboardingComplete?:boolean}|null;const info:AccessInfo={isAdmin:Boolean(access?.isAdmin),accountStatus:access?.accountStatus==='suspended'?'suspended':'active',onboardingComplete:Boolean(access?.onboardingComplete)};setIsAdmin(info.isAdmin);setAccountStatus(info.accountStatus);setOnboardingComplete(info.onboardingComplete);return info}
   useEffect(() => {
     if (!isSupabaseConfigured) return
     supabase.auth.getSession().then(async({ data }) => { setSession(data.session);await loadAccess(data.session?.user.id);setLoading(false) })

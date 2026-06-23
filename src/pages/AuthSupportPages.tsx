@@ -1,6 +1,7 @@
 import { ArrowLeft, ArrowRight, Check, KeyRound, LoaderCircle, Mail, Sparkles } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { Logo } from '../components/Logo'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 
@@ -18,4 +19,4 @@ export function ResetPasswordPage() {
   return <AuthFrame><div className="auth-support-content"><span className="auth-support-icon"><KeyRound /></span><div className="eyebrow">Choose a new password</div><h1>Make it memorable and strong.</h1><p>Use at least eight characters with an uppercase letter and a number.</p><form onSubmit={submit}><label>New password<input type="password" name="password" required /></label><label>Confirm password<input type="password" name="confirm" required /></label>{message&&<div className="form-message">{message}</div>}<button className="button button-primary button-full" disabled={loading}>Update password <ArrowRight /></button></form></div></AuthFrame>
 }
 
-export function AuthCallbackPage() { const navigate=useNavigate(); const [error,setError]=useState(''); useEffect(()=>{if(!isSupabaseConfigured){navigate('/onboarding',{replace:true});return}supabase.auth.getSession().then(({data,error})=>{if(error)setError(error.message);else navigate(data.session?'/onboarding':'/login',{replace:true})})},[navigate]); return <AuthFrame><div className="auth-support-content"><span className="auth-support-icon spin"><LoaderCircle /></span><div className="eyebrow"><Sparkles /> Secure sign in</div><h1>{error?'We could not finish signing you in.':'Opening your learning loop…'}</h1><p>{error||'Confirming your account and preparing your profile.'}</p></div></AuthFrame> }
+export function AuthCallbackPage() { const navigate=useNavigate(); const { refreshAccess } = useAuth(); const [error,setError]=useState(''); useEffect(()=>{if(!isSupabaseConfigured){navigate('/onboarding',{replace:true});return}supabase.auth.getSession().then(async({data,error})=>{if(error){setError(error.message);return}if(!data.session){navigate('/login',{replace:true});return}const access=await refreshAccess(); navigate(access?.onboardingComplete?'/dashboard':'/onboarding',{replace:true})})},[navigate,refreshAccess]); return <AuthFrame><div className="auth-support-content"><span className="auth-support-icon spin"><LoaderCircle /></span><div className="eyebrow"><Sparkles /> Secure sign in</div><h1>{error?'We could not finish signing you in.':'Opening your learning loop…'}</h1><p>{error||'Confirming your account and preparing your profile.'}</p></div></AuthFrame> }
