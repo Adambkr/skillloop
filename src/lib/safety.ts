@@ -1,0 +1,8 @@
+import { isSupabaseConfigured, supabase } from './supabase'
+
+export type SafetyTarget='profile'|'message'|'session'|'review'|'circle_post'|'circle_reply'
+export const reportReasons=['spam','harassment','fake profile','scam','no-show','inappropriate content','unsafe behavior','other'] as const
+function read<T>(key:string,fallback:T):T{try{return JSON.parse(localStorage.getItem(key)||'') as T}catch{return fallback}}
+export async function submitSafetyReport(targetType:SafetyTarget,targetId:string,reason:string,details:string){if(!isSupabaseConfigured){const key='skillloop_preview_safety_reports',rows=read<unknown[]>(key,[]);localStorage.setItem(key,JSON.stringify([{id:crypto.randomUUID(),targetType,targetId,reason,details,createdAt:new Date().toISOString()},...rows]));return}const{error}=await supabase.rpc('submit_safety_report',{report_payload:{target_type:targetType,target_id:targetId,reason,details}});if(error)throw error}
+export async function toggleUserBlock(userId:string){if(!isSupabaseConfigured){const key='skillloop_preview_blocks',ids=read<string[]>(key,[]),blocked=!ids.includes(userId);localStorage.setItem(key,JSON.stringify(blocked?[...ids,userId]:ids.filter(id=>id!==userId)));return blocked}const{data,error}=await supabase.rpc('toggle_user_block',{target_user:userId});if(error)throw error;return Boolean(data)}
+export async function flagNoShow(sessionId:string,userId:string,details:string){if(!isSupabaseConfigured)return submitSafetyReport('session',sessionId,'no-show',details);const{error}=await supabase.rpc('flag_session_no_show',{target_session:sessionId,target_user:userId,details});if(error)throw error}
